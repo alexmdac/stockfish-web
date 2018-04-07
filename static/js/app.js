@@ -5,13 +5,13 @@
 var board,
     game = new Chess(),
     statusEl = $('#status'),
-    fenEl = $('#fen');
+    player = 'w';
 
 function onDragStart(source, piece, position, orientation) {
     if (game.game_over() ||
-        (game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-        (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-        return false;
+        game.turn() !== player ||
+        piece[0] !== player) {
+        return false;  // Prevent move.
     }
 }
 
@@ -19,39 +19,50 @@ function onDrop(source, target) {
     var move = game.move({
         from: source,
         to: target,
-        promotion: 'q' // NOTE: always promote to a queen for example simplicity
+        promotion: 'q' // NOTE: always promote to a queen for simplicity.
     });
     if (move === null) {
         return 'snapback';  // Illegal move.
     }
     updateStatus();
+    // HACK: Add a short pause to prevent board animations interfering with one another.
+    window.setTimeout(sendPositionToServer, 50);
+}
+
+function sendPositionToServer() {
+    var json = JSON.stringify({
+        fen: game.fen()
+    });
+    $.post('/make_move', json, onReceivePositionFromServer);
+}
+
+function onReceivePositionFromServer(data, status, xhr) {
+    if (status === 'success') {
+        game.move(data['best_move'], {sloppy: true})
+        updateBoard();
+        updateStatus();
+    } else {
+        statusEl.html('Server failure: ' + serverFailure);
+    }
 }
 
 function onSnapEnd() {
+    updateBoard();
+}
+
+function updateBoard() {
     board.position(game.fen());
 }
 
 function updateStatus() {
     var status = '';
-
-    var moveColor = 'White';
-    if (game.turn() === 'b') {
-        moveColor = 'Black';
-    }
-
     if (game.in_checkmate()) {
-        status = 'Game over, ' + moveColor + ' is in checkmate.';
+        var turn = game.turn() === 'b' ? 'Black' : 'White';
+        status = turn + ' is in checkmate.';
     } else if (game.in_draw()) {
-        status = 'Game over, drawn position';
-    } else {
-        status = moveColor + ' to move';
-        if (game.in_check()) {
-            status += ', ' + moveColor + ' is in check';
-        }
+        status = 'The position is drawn.';
     }
-
     statusEl.html(status);
-    fenEl.html(game.fen());
 }
 
 var cfg = {

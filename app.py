@@ -24,7 +24,6 @@ def make_move():
     board.push(best_move)
     return jsonify({
         'best_move': best_move.uci(),
-        'new_fen': board.fen(),
     })
 
 @app.route('/')

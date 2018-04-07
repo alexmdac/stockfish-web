@@ -5,7 +5,8 @@ from chess.uci import popen_engine
 from flask import Flask, jsonify, request
 import os
 
-MOVE_MS = 50
+MOVE_MS = 1
+DEPTH = 1
 
 engine = popen_engine('stockfish')
 engine.uci()
@@ -21,7 +22,7 @@ def make_move():
         return '', 400
     engine.ucinewgame()
     engine.position(board)
-    best_move = engine.go(movetime=MOVE_MS)[0]
+    best_move = engine.go(movetime=MOVE_MS, depth=DEPTH)[0]
     board.push(best_move)
     return jsonify({
         'best_move': best_move.uci(),

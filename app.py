@@ -26,3 +26,7 @@ def make_move():
         'best_move': best_move.uci(),
         'new_fen': board.fen(),
     })
+
+@app.route('/')
+def get_index():
+    return app.send_static_file('index.html')

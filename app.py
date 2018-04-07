@@ -3,6 +3,7 @@
 from chess import Board
 from chess.uci import popen_engine
 from flask import Flask, jsonify, request
+import os
 
 MOVE_MS = 50
 
@@ -29,3 +30,7 @@ def make_move():
 @app.route('/')
 def get_index():
     return app.send_static_file('index.html')
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8080))
+    app.run(port=port, host='0.0.0.0')

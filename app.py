@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request
 import os
 
 MOVE_MS = 1
-DEPTH = 1
+DEPTH = 2
 
 engine = popen_engine('stockfish')
 engine.uci()

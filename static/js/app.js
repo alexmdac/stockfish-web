@@ -3,9 +3,30 @@
 (function() {
 
 var board,
-    game = new Chess(),
+    game,
     statusEl = $('#status'),
     player = 'w';
+
+function init() {
+    game = new Chess();
+    var cfg = {
+        draggable: true,
+        onDragStart: onDragStart,
+        onDrop: onDrop,
+        onMoveEnd: onMoveEnd,
+        onSnapEnd: onSnapEnd,
+        orientation: player === 'w' ? 'white' : 'black',
+        pieceTheme: 'static/img/chesspieces/wikipedia/{piece}.png',
+        position: 'start',
+        showNotation: false,
+    };
+    board = ChessBoard('board', cfg);
+
+    updateStatus();
+    if (player === 'b') {
+        sendPositionToServer();
+    }
+}
 
 function onDragStart(source, piece, position, orientation) {
     if (game.game_over() ||
@@ -33,17 +54,25 @@ function sendPositionToServer() {
     var json = JSON.stringify({
         fen: game.fen()
     });
-    $.post('/make_move', json, onReceivePositionFromServer);
+    $.post('/make_move', json, function(data, status, xhr) {
+        onReceivePositionFromServer(game, data, status, xhr);
+    });
 }
 
-function onReceivePositionFromServer(data, status, xhr) {
+function onReceivePositionFromServer(gameForReq, data, status, xhr) {
+    if (gameForReq != game) {
+        return;  // new game was started.
+    }
     if (status === 'success') {
         game.move(data['best_move'], {sloppy: true})
         updateBoard();
-        updateStatus();
     } else {
         statusEl.html('Server failure: ' + serverFailure);
     }
+}
+
+function onMoveEnd() {
+    updateStatus();
 }
 
 function onSnapEnd() {
@@ -57,25 +86,24 @@ function updateBoard() {
 function updateStatus() {
     var status = '';
     if (game.in_checkmate()) {
-        var turn = game.turn() === 'b' ? 'Black' : 'White';
-        status = turn + ' is in checkmate.';
+        if (game.turn() === player) {
+            status = 'You lose!';
+        } else {
+            status = 'You win!';
+        }
     } else if (game.in_draw()) {
-        status = 'The position is drawn.';
+        status = 'It\'s a draw!';
     }
     statusEl.html(status);
 }
 
-var cfg = {
-    draggable: true,
-    onDragStart: onDragStart,
-    onDrop: onDrop,
-    onSnapEnd: onSnapEnd,
-    pieceTheme: 'static/img/chesspieces/wikipedia/{piece}.png',
-    position: 'start',
-    showNotation: false,
-};
-board = ChessBoard('board', cfg);
-
-updateStatus();
-
+$('#new_game_white').click(function(){
+    player = 'w';
+    init();
+});
+$('#new_game_black').click(function(){
+    player = 'b';
+    init();
+});
+init();
 })();

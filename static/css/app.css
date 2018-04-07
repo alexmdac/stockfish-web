@@ -1,16 +1,27 @@
 body {
-    margin: 2em;
+    margin-top: 5%;
     background: #efeae2;
-    font-size: 125%;
-    font-family: serif;
+    font-family: sans-serif;
 }
 
-#board {
+#board, #controls {
     margin: 0 auto;
     width: 90%;
 }
 
+#controls {
+    margin-top: 3%;
+}
+
+button {
+    float: left;
+    font-size: 125%;
+    margin-right: 0.5em;
+    padding: 0.25em;
+}
+
 #status {
-    padding: 1em;
-    text-align: center;
+    float: right;
+    font-size: 125%;
+    padding: 0.25em;
 }

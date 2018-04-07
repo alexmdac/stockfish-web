@@ -5,6 +5,7 @@
 var board,
     game,
     statusEl = $('#status'),
+    hintEl = $('#hint'),
     player = 'w';
 
 function init() {
@@ -22,9 +23,9 @@ function init() {
     };
     board = ChessBoard('board', cfg);
 
-    updateStatus();
+    updateUi();
     if (player === 'b') {
-        sendPositionToServer();
+        sendPositionToServer(handleMoveFromServer);
     }
 }
 
@@ -45,34 +46,46 @@ function onDrop(source, target) {
     if (move === null) {
         return 'snapback';  // Illegal move.
     }
-    updateStatus();
+    updateUi();
     // HACK: Add a short pause to prevent board animations interfering with one another.
-    window.setTimeout(sendPositionToServer, 50);
+    window.setTimeout(function(){ sendPositionToServer(handleMoveFromServer) }, 50);
 }
 
-function sendPositionToServer() {
+function sendPositionToServer(handleMove) {
     var json = JSON.stringify({
         fen: game.fen()
     });
+    var currentGame = game;
     $.post('/make_move', json, function(data, status, xhr) {
-        onReceivePositionFromServer(game, data, status, xhr);
+        // Check that a new game has not started.
+        if (currentGame !== game) {
+            return;
+        }
+        if (status === 'success') {
+            handleMove(data['best_move']);
+        } else {
+            statusEl.html('Server failure: ' + serverFailure);
+        }
     });
 }
 
-function onReceivePositionFromServer(gameForReq, data, status, xhr) {
-    if (gameForReq != game) {
-        return;  // new game was started.
-    }
-    if (status === 'success') {
-        game.move(data['best_move'], {sloppy: true})
-        updateBoard();
-    } else {
-        statusEl.html('Server failure: ' + serverFailure);
+function requestHintFromServer() {
+    if (!game.game_over()) {
+        sendPositionToServer(handleHintFromServer);
     }
 }
 
+function handleMoveFromServer(move) {
+    game.move(move, {sloppy: true})
+    updateBoard();
+}
+
+function handleHintFromServer(move) {
+    statusEl.html('Hint: ' + move);
+}
+
 function onMoveEnd() {
-    updateStatus();
+    updateUi();
 }
 
 function onSnapEnd() {
@@ -83,7 +96,7 @@ function updateBoard() {
     board.position(game.fen());
 }
 
-function updateStatus() {
+function updateUi() {
     var status = '';
     if (game.in_checkmate()) {
         if (game.turn() === player) {
@@ -95,15 +108,23 @@ function updateStatus() {
         status = 'It\'s a draw!';
     }
     statusEl.html(status);
+
+    if (game.game_over()) {
+        hintEl.hide();
+    } else {
+        hintEl.show();
+    }
 }
 
-$('#new_game_white').click(function(){
+$('#new_white').click(function(){
     player = 'w';
     init();
 });
-$('#new_game_black').click(function(){
+$('#new_black').click(function(){
     player = 'b';
     init();
 });
+hintEl.click(requestHintFromServer);
+
 init();
 })();

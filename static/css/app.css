@@ -1,0 +1,16 @@
+body {
+    margin: 2em;
+    background: #efeae2;
+    font-size: 125%;
+    font-family: serif;
+}
+
+#board {
+    margin: 0 auto;
+    width: 90%;
+}
+
+#status {
+    padding: 1em;
+    text-align: center;
+}

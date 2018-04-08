@@ -56,7 +56,7 @@ function sendPositionToServer(handleMove) {
         fen: game.fen()
     });
     var currentGame = game;
-    $.post('/make_move', json, function(data, status, xhr) {
+    $.post('/find_move', json, function(data, status, xhr) {
         // Check that a new game has not started.
         if (currentGame !== game) {
             return;

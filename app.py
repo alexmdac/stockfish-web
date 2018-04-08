@@ -13,7 +13,7 @@ engine.uci()
 
 app = Flask(__name__)
 
-@app.route('/make_move', methods=['POST'])
+@app.route('/find_move', methods=['POST'])
 def make_move():
     req = request.get_json(force=True)
     try:

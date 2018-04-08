@@ -7,21 +7,23 @@ body {
 #board, #controls {
     margin: 0 auto;
     width: 90%;
+    max-width: 600px;
 }
 
 #controls {
-    margin-top: 3%;
+    margin-top: 1em;
+}
+
+button, #status {
+    font-size: 125%;
+    padding: 0.25em;
 }
 
 button {
     float: left;
-    font-size: 125%;
     margin-right: 0.5em;
-    padding: 0.25em;
 }
 
 #status {
     float: right;
-    font-size: 125%;
-    padding: 0.25em;
 }

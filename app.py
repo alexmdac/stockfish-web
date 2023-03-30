@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
-from chess import Board
-from chess.uci import popen_engine
+import chess
+import chess.engine
 from flask import Flask, jsonify, request
 import os
 
-MOVE_MS = 1
+MOVE_SECS = 0.001
 DEPTH = 2
 
-engine = popen_engine('stockfish')
-engine.uci()
+engine = chess.engine.SimpleEngine.popen_uci('stockfish')
 
 app = Flask(__name__)
 
@@ -17,15 +16,12 @@ app = Flask(__name__)
 def make_move():
     req = request.get_json(force=True)
     try:
-        board = Board(req['fen'])
+        board = chess.Board(req['fen'])
     except (ValueError, KeyError):
         return '', 400
-    engine.ucinewgame()
-    engine.position(board)
-    best_move = engine.go(movetime=MOVE_MS, depth=DEPTH)[0]
-    board.push(best_move)
+    result = engine.play(board, chess.engine.Limit(time=MOVE_SECS, depth=DEPTH))
     return jsonify({
-        'best_move': best_move.uci(),
+        'best_move': result.move.uci(),
     })
 
 @app.route('/')
